@@ -27,6 +27,7 @@ export interface AuthKitSetState<T> {
      * User state object
      */
     userState?: T;
+    refreshExpiresAt?: number;
 }
 /**
  * TokenObject Class.
@@ -70,7 +71,7 @@ declare class TokenObject<T> {
      * Refresh Token Expiration time. Used for when the refresh token is not JWT.
      * @private
      */
-    private refreshExpiresAt?;
+    private readonly refreshExpiresAt?;
     /**
      * Auth Value
      */

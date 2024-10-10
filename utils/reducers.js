@@ -15,6 +15,7 @@ function doSignIn(signInParams) {
       type: authType
     },
     refresh: signInParams.refresh,
+    refreshExpiresAt: signInParams.refreshExpiresAt,
     userState: signInParams.userState || {}
   };
 }

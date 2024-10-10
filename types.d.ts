@@ -33,6 +33,10 @@ export interface SignInActionPayload<T> {
      * Path to Redirect after logging in
      */
     navigateTo?: string;
+    /**
+     * Expiring time for refresh token in seeconds.
+     */
+    refreshExpiresAt?: number;
 }
 /**
  * Parameters used by the Sign In function
