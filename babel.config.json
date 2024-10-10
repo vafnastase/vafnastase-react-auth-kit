@@ -1,0 +1,19 @@
+{ 
+    "extends": "../../babel.config.js",
+    "overrides": [
+        {
+            "test": [
+              "./src/index.tsx",
+              "./src/AuthContext.ts",
+              "./src/AuthProvider.tsx",
+              "./src/PrivateRoute.tsx",
+              "./src/hooks/*"
+            ],
+            "presets": [
+              ["@babel/preset-env", { "targets": { "ie": 11 } }],
+              ["@babel/preset-react", { "runtime": "automatic" }]
+            ]
+          }
+    ]
+}
+
