@@ -44,6 +44,12 @@ interface createStoreParam<T> {
   refresh?: createRefreshParamInterface<T>;
 
   /**
+   * Expiring time for refresh token in seeconds.
+   * This is needed if you are using refresh tokens that are not JWT and cannot be parsed by a JWT parser.
+   */
+  refreshExpiresAt?: number;
+
+  /**
    * If Debug or not. Use this to debug your auth flow
    */
   debug?: boolean;
@@ -126,6 +132,8 @@ export default function createStore<T>(
    */
   const refreshTokenName = params.refresh ? `${params.authName}_refresh` : null;
 
+  const refreshExpiresAt = params.refreshExpiresAt ?? undefined;
+
   /**
    * Instanciate the TokenObject with proper prameters
    */
@@ -136,6 +144,7 @@ export default function createStore<T>(
       params.debug === undefined ? false : params.debug,
       params.cookieDomain,
       params.cookieSecure,
+      refreshExpiresAt,
   );
 
   return {

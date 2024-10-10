@@ -11,11 +11,12 @@ var _rxjs = require("rxjs");
 var _errors = require("./errors");
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
 class TokenObject {
-  constructor(authStorageName, authStorageType, refreshTokenName, debug, cookieDomain, cookieSecure) {
+  constructor(authStorageName, authStorageType, refreshTokenName, debug, cookieDomain, cookieSecure, refreshExpiresAt) {
     this.authStorageName = authStorageName;
     this.authStorageType = authStorageType;
     this.stateStorageName = `${authStorageName}_state`;
     this.refreshTokenName = refreshTokenName;
+    this.refreshExpiresAt = refreshExpiresAt;
     this.cookieDomain = cookieDomain;
     this.cookieSecure = cookieSecure;
     this.debug = debug;
@@ -105,24 +106,35 @@ class TokenObject {
         };
       } else if (data.refresh) {
         try {
-          const refreshExpireTime = this.getExpireDateTime(data.refresh);
-          if (refreshExpireTime > new Date()) {
-            obj = {
-              ...obj,
-              refresh: {
-                'token': data.refresh,
-                'expiresAt': refreshExpireTime
-              }
-            };
-          } else {
-            obj = {
-              ...obj,
-              auth: null,
-              isSignIn: false,
-              userState: null,
-              refresh: null
-            };
-            new _errors.AuthError('Given Refresh Token is already expired.');
+          let refreshExpireTime = null;
+          try {
+            refreshExpireTime = this.getExpireDateTime(data.refresh);
+          } catch (error) {
+            if (this.refreshExpiresAt) {
+              refreshExpireTime = new Date(this.refreshExpiresAt);
+            } else {
+              new _errors.AuthError('Refresh Token is not a valid JWT. And no manual refresh expiration time is set.');
+            }
+          }
+          if (refreshExpireTime !== null) {
+            if (refreshExpireTime > new Date()) {
+              obj = {
+                ...obj,
+                refresh: {
+                  'token': data.refresh,
+                  'expiresAt': refreshExpireTime
+                }
+              };
+            } else {
+              obj = {
+                ...obj,
+                auth: null,
+                isSignIn: false,
+                userState: null,
+                refresh: null
+              };
+              new _errors.AuthError('Given Refresh Token is already expired.');
+            }
           }
         } catch (e) {
           obj = {
@@ -181,18 +193,29 @@ class TokenObject {
       if (this.isUsingRefreshToken && !!refreshToken) {
         this.log(`checkTokenExist - isUsingRefreshToken
           = ${this.isUsingRefreshToken} refrehToken - ${refreshToken}`);
-        const refreshTokenExpiresAt = this.getExpireDateTime(refreshToken);
-        if (refreshTokenExpiresAt < new Date()) {
-          this.log(`checkTokenExist - refresh token is expired 
+        let refreshTokenExpiresAt = null;
+        try {
+          refreshTokenExpiresAt = this.getExpireDateTime(refreshToken);
+        } catch (error) {
+          if (this.refreshExpiresAt) {
+            refreshTokenExpiresAt = new Date(this.refreshExpiresAt);
+          } else {
+            throw new _errors.AuthError('Refresh Token is not a valid JWT. And no manual refresh expiration time is set.');
+          }
+        }
+        if (refreshTokenExpiresAt) {
+          if (refreshTokenExpiresAt < new Date()) {
+            this.log(`checkTokenExist - refresh token is expired
             ${refreshTokenExpiresAt} ${new Date()}`);
-          refresh = null;
-        } else {
-          this.log(`checkTokenExist - new refresh token is assigned 
+            refresh = null;
+          } else {
+            this.log(`checkTokenExist - new refresh token is assigned
             ${refreshToken}`);
-          refresh = {
-            token: refreshToken,
-            expiresAt: refreshTokenExpiresAt
-          };
+            refresh = {
+              token: refreshToken,
+              expiresAt: refreshTokenExpiresAt
+            };
+          }
         }
       } else {
         this.log(`checkTokenExist - Refesh Token is invalid or not using
@@ -217,7 +240,7 @@ class TokenObject {
         try {
           const expiresAt = this.getExpireDateTime(authToken);
           if (expiresAt < new Date()) {
-            this.log(`checkTokenExist - auth token is expired 
+            this.log(`checkTokenExist - auth token is expired
               ${expiresAt} ${new Date()}`);
             auth = null;
             authState = null;
@@ -236,7 +259,7 @@ class TokenObject {
             }
           }
         } catch (e) {
-          this.log(`checkTokenExist - auth token or auth state is invalid 
+          this.log(`checkTokenExist - auth token or auth state is invalid
             ${authToken} ${stateCookie}`);
           this.log(`Error Occured: ${e}`);
           auth = null;
@@ -381,12 +404,23 @@ class TokenObject {
   setRefreshToken = refreshToken => {
     if (this.authStorageType === 'cookie') {
       if (this.isUsingRefreshToken && !!this.refreshTokenName && !!refreshToken) {
-        const refreshTokenExpiresAt = this.getExpireDateTime(refreshToken);
-        _jsCookie.default.set(this.refreshTokenName, refreshToken, {
-          expires: refreshTokenExpiresAt,
-          domain: this.cookieDomain,
-          secure: this.cookieSecure
-        });
+        let refreshTokenExpiresAt = null;
+        try {
+          refreshTokenExpiresAt = this.getExpireDateTime(refreshToken);
+        } catch (error) {
+          if (this.refreshExpiresAt) {
+            refreshTokenExpiresAt = new Date(this.refreshExpiresAt);
+          } else {
+            throw new _errors.AuthError('Refresh Token is not a valid JWT. And no manual refresh expiration time is set.');
+          }
+        }
+        if (refreshTokenExpiresAt) {
+          _jsCookie.default.set(this.refreshTokenName, refreshToken, {
+            expires: refreshTokenExpiresAt,
+            domain: this.cookieDomain,
+            secure: this.cookieSecure
+          });
+        }
       }
     } else if (this.isUsingRefreshToken && !!this.refreshTokenName && !!refreshToken) {
       localStorage.setItem(this.refreshTokenName, refreshToken);

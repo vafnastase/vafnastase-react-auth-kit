@@ -39,6 +39,11 @@ interface createStoreParam<T> {
      */
     refresh?: createRefreshParamInterface<T>;
     /**
+     * Expiring time for refresh token in seeconds.
+     * This is needed if you are using refresh tokens that are not JWT and cannot be parsed by a JWT parser.
+     */
+    refreshExpiresAt?: number;
+    /**
      * If Debug or not. Use this to debug your auth flow
      */
     debug?: boolean;

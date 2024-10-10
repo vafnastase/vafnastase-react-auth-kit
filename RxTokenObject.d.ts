@@ -67,6 +67,11 @@ declare class TokenObject<T> {
      */
     private readonly isUsingRefreshToken;
     /**
+     * Refresh Token Expiration time. Used for when the refresh token is not JWT.
+     * @private
+     */
+    private refreshExpiresAt?;
+    /**
      * Auth Value
      */
     private authValue;
@@ -96,8 +101,12 @@ declare class TokenObject<T> {
      * @param cookieSecure - cookies are secure or not,
      * only applicable when `authStorageType` is `cookie`
      *
+     * @param refreshExpiresAt - refresh token expiration
+     * manual expiration time of the token.
+     *
+     *
      */
-    constructor(authStorageName: string, authStorageType: 'cookie' | 'localstorage', refreshTokenName: string | null, debug: boolean, cookieDomain?: string, cookieSecure?: boolean);
+    constructor(authStorageName: string, authStorageType: 'cookie' | 'localstorage', refreshTokenName: string | null, debug: boolean, cookieDomain?: string, cookieSecure?: boolean, refreshExpiresAt?: number);
     /**
      * Subscribe method for TokenObject
      *
